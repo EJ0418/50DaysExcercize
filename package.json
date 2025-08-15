@@ -1,0 +1,26 @@
+{
+  "name": "50days-excercize",
+  "version": "1.0.0",
+  "private": true,
+  "homepage": "https://EJ0418.github.io/50DaysExcercize",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "lucide-react": "^0.292.0",
+    "recharts": "^2.7.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.14",
+    "@types/react-dom": "^18.2.7",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.0",
+    "gh-pages": "^6.0.0"
+  }
+}
