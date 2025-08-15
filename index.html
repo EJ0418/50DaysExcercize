@@ -1,582 +1,547 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>健身追蹤器</title>
-    <meta name="theme-color" content="#3B82F6">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="健身追蹤">
-    <link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgdmlld0JveD0iMCAwIDE4MCAxODAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxODAiIGhlaWdodD0iMTgwIiByeD0iNDAiIGZpbGw9IiMzQjgyRjYiLz4KPHN2ZyB4PSI0NSIgeT0iNDUiIHdpZHRoPSI5MCIgaGVpZ2h0PSI5MCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+CjxwYXRoIGQ9Im02IDEyIDYtNiA2IDYiLz4KPHN0cm9rZSBkPSJNMTIgMTl2LTEzIi8+CjwvZz4KPC9zdmc+">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5; color: #333; line-height: 1.6; -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent; }
-        .container { max-width: 100vw; padding: 0; background: white; min-height: 100vh; }
-        .header { background: linear-gradient(135deg, #3B82F6, #1D4ED8); color: white; padding: 20px; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .header h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; }
-        .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 15px; }
-        .stat-card { background: rgba(255,255,255,0.2); padding: 12px 8px; border-radius: 8px; text-align: center; }
-        .stat-card .label { font-size: 0.75rem; opacity: 0.9; margin-bottom: 4px; }
-        .stat-card .value { font-size: 1.25rem; font-weight: bold; }
-        .day-selector { padding: 15px; background: white; border-bottom: 1px solid #e5e5e5; }
-        .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; max-height: 200px; overflow-y: auto; }
-        .day-btn { aspect-ratio: 1; border: 2px solid #e5e5e5; border-radius: 8px; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; position: relative; }
-        .day-btn.active { border-color: #3B82F6; background: #3B82F6; color: white; }
-        .day-btn .day-num { font-weight: 600; }
-        .day-btn .weekday { font-size: 0.65rem; opacity: 0.7; }
-        .day-btn .indicators { display: flex; gap: 2px; margin-top: 2px; }
-        .indicator { width: 6px; height: 6px; border-radius: 50%; }
-        .indicator.cardio { background: #3B82F6; }
-        .indicator.weights { background: #10B981; }
-        .training-section { padding: 20px; }
-        .tab-buttons { display: flex; background: white; border-radius: 8px; padding: 4px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: transparent; border-radius: 6px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.2s; color: #6B7280; }
-        .tab-btn.active { background: #3B82F6; color: white; }
-        .section-title { font-size: 1.25rem; font-weight: 600; margin-bottom: 15px; color: #374151; }
-        .cardio-card { background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2); color: #1e40af; padding: 20px; border-radius: 12px; margin-bottom: 20px; }
-        .cardio-info { margin-bottom: 15px; }
-        .cardio-type { font-size: 1.1rem; font-weight: 600; margin-bottom: 5px; }
-        .cardio-duration { font-size: 0.9rem; opacity: 0.9; }
-        .cardio-btn { width: 100%; padding: 12px; border: 2px solid rgba(59, 130, 246, 0.3); border-radius: 8px; background: rgba(59, 130, 246, 0.1); color: #1e40af; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .cardio-btn.completed { background: rgba(16, 185, 129, 0.2); color: #047857; border-color: rgba(16, 185, 129, 0.4); }
-        .weights-card { background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #047857; padding: 20px; border-radius: 12px; }
-        .weights-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 15px; }
-        .exercise-list { space-y: 12px; }
-        .exercise-item { background: rgba(255,255,255,0.5); border: 1px solid rgba(16, 185, 129, 0.2); padding: 15px; border-radius: 8px; margin-bottom: 12px; }
-        .exercise-name { font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
-        .last-weight { font-size: 0.8rem; opacity: 0.8; }
-        .weight-input-group { display: flex; align-items: center; gap: 8px; }
-        .weight-input { flex: 1; padding: 10px; border: 2px solid rgba(16, 185, 129, 0.3); border-radius: 6px; background: rgba(255,255,255,0.9); color: #333; font-size: 1rem; text-align: center; }
-        .weight-input:focus { outline: none; border-color: #10B981; background: white; }
-        .last-btn { padding: 8px 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; color: #047857; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-        .last-btn:active { background: rgba(16, 185, 129, 0.2); }
-        .unit { font-size: 0.9rem; opacity: 0.8; }
-        .status { margin-top: 15px; text-align: center; font-size: 0.9rem; opacity: 0.9; }
-        .no-training { text-align: center; padding: 40px 20px; color: #6B7280; }
-        .chart-container-all { max-height: calc(100vh - 250px); overflow-y: auto; padding: 20px; }
-        .chart-container { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .chart-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 15px; color: #374151; }
-        .chart-canvas { width: 100%; height: 300px; }
-        .legend-container { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 15px; justify-content: center; }
-        .legend-item { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: #f8f9fa; border-radius: 20px; font-size: 0.85rem; font-weight: 500; }
-        .legend-color { width: 12px; height: 12px; border-radius: 2px; }
-        @media (max-width: 480px) {
-            .header { padding: 15px; }
-            .header h1 { font-size: 1.3rem; }
-            .day-grid { grid-template-columns: repeat(7, 1fr); gap: 6px; }
-            .day-btn { font-size: 0.7rem; }
-            .training-section { padding: 15px; }
-            .legend-container { gap: 8px; }
-            .legend-item { font-size: 0.8rem; padding: 4px 8px; }
-        }
-        @supports (-webkit-touch-callout: none) {
-            .container { min-height: -webkit-fill-available; }
-        }
+import React, { useState } from 'react';
+import { CheckCircle2, Circle, Calendar, Dumbbell, Heart, TrendingUp, PieChart } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
-        /* Settings page specific styles */
-        .settings-page { padding: 20px; display: none; }
-        .settings-page h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 20px; color: #374151; }
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-weight: 600; margin-bottom: 8px; color: #374151; }
-        .form-control { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
-        .exercise-list-container { margin-top: 10px; border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px; }
-        .exercise-item-setting { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid #eee; }
-        .exercise-item-setting:last-child { border-bottom: none; }
-        .exercise-item-setting button { background: #EF4444; color: white; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
-        .settings-btn { width: 100%; padding: 12px; background: #3B82F6; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 20px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1 id="main-header"></h1>
-            <div class="stats" id="stats-section">
-                <div class="stat-card">
-                    <div class="label">有氧</div>
-                    <div class="value" id="cardio-rate">0%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">重訓</div>
-                    <div class="value" id="weights-rate">0%</div>
-                </div>
-                <div class="stat-card">
-                    <div class="label">總計</div>
-                    <div class="value" id="total-rate">0%</div>
-                </div>
-            </div>
-        </div>
+const FitnessTracker = () => {
+  // 訓練計劃模板
+  const trainingPlan = {
+    上肢訓練: ['啞鈴肩推', '啞鈴胸推', '啞鈴划船', '啞鈴側平舉'],
+    下肢訓練: ['啞鈴硬舉', '弓步蹲', '臀橋']
+  };
+
+  // 有氧訓練類型
+  const cardioTypes = [
+    '跑步機快走', '滑步機', '腳踏車機', '跑步機間歇', '排球', '伸展'
+  ];
+
+  // 初始化50天的訓練數據
+  const initializeTrainingData = () => {
+    const data = [];
+    for (let day = 1; day <= 50; day++) {
+      const dayOfWeek = ((day - 1) % 7);
+      const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+      
+      let cardioType, duration, weightTraining;
+      
+      // 根據星期安排訓練
+      if (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4) { // 週一三五 - 上肢
+        cardioType = cardioTypes[Math.floor(Math.random() * 4)]; // 前4種有氧
+        duration = day <= 7 ? 15 : day <= 14 ? 20 : 25;
+        weightTraining = '上肢訓練';
+      } else if (dayOfWeek === 1 || dayOfWeek === 3) { // 週二四 - 下肢
+        cardioType = cardioTypes[Math.floor(Math.random() * 4)]; // 前4種有氧
+        duration = day <= 7 ? 15 : day <= 14 ? 20 : 25;
+        weightTraining = '下肢訓練';
+      } else if (dayOfWeek === 5) { // 週六 - 排球
+        cardioType = '排球';
+        duration = 240;
+        weightTraining = null;
+      } else { // 週日 - 伸展
+        cardioType = '伸展';
+        duration = 10;
+        weightTraining = null;
+      }
+
+      data.push({
+        day,
+        weekday: weekdays[dayOfWeek],
+        cardio: {
+          type: cardioType,
+          duration,
+          completed: false
+        },
+        weights: weightTraining ? {
+          type: weightTraining,
+          exercises: trainingPlan[weightTraining].reduce((acc, exercise) => {
+            acc[exercise] = '';
+            return acc;
+          }, {}),
+          completed: false
+        } : null
+      });
+    }
+    return data;
+  };
+
+  // 計算當前應該是第幾天
+  const calculateCurrentDay = () => {
+    const startDate = new Date('2025-08-11');
+    const today = new Date();
+    const diffTime = today - startDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    
+    // 確保天數在1-50範圍內
+    if (diffDays < 1) return 1;
+    if (diffDays > 50) return 50;
+    return diffDays;
+  };
+
+  const [trainingData, setTrainingData] = useState(initializeTrainingData());
+  const [selectedDay, setSelectedDay] = useState(calculateCurrentDay());
+  const [activeView, setActiveView] = useState('daily'); // 'daily', 'charts', 'stats'
+
+  // 更新有氧完成狀態
+  const updateCardioStatus = (day, completed) => {
+    setTrainingData(prev => prev.map(item => 
+      item.day === day 
+        ? { ...item, cardio: { ...item.cardio, completed } }
+        : item
+    ));
+  };
+
+  // 更新重量記錄
+  const updateWeight = (day, exercise, weight) => {
+    setTrainingData(prev => prev.map(item => {
+      if (item.day === day && item.weights) {
+        const newExercises = { ...item.weights.exercises, [exercise]: weight };
+        const completed = Object.values(newExercises).some(w => w !== '');
         
-        <div id="main-content">
-            <div class="day-selector">
-                <div class="day-grid" id="day-grid"></div>
-            </div>
-            
-            <div class="training-section">
-                <div class="tab-buttons">
-                    <button class="tab-btn active" onclick="switchTab('training')">今日訓練</button>
-                    <button class="tab-btn" onclick="switchTab('charts')">進度圖表</button>
-                    <button class="tab-btn" onclick="switchTab('settings')">設定</button>
-                </div>
-                
-                <div id="training-tab"></div>
-                
-                <div id="charts-tab" style="display: none;">
-                    <div class="chart-container-all" id="chart-container-all"></div>
-                </div>
-                
-                <div id="settings-tab" class="settings-page" style="display: none;">
-                    <h2>個人訓練計畫設定</h2>
-                    
-                    <div class="form-group">
-                        <label for="startDate">計畫開始日期</label>
-                        <input type="date" id="startDate" class="form-control">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>有氧項目</label>
-                        <input type="text" id="newCardioInput" class="form-control" placeholder="輸入有氧項目名稱，例如：跑步機">
-                        <button class="settings-btn" onclick="addExercise('cardio')">新增有氧項目</button>
-                        <div id="cardio-list" class="exercise-list-container"></div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label>重訓項目</label>
-                        <input type="text" id="newWeightsInput" class="form-control" placeholder="輸入重訓項目名稱，例如：深蹲">
-                        <button class="settings-btn" onclick="addExercise('weights')">新增重訓項目</button>
-                        <div id="weights-list" class="exercise-list-container"></div>
-                    </div>
-
-                    <button class="settings-btn" onclick="saveSettings()">儲存設定</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
-    <script>
-        let currentTab = 'training';
-        let charts = {};
-        
-        let userSettings = {
-            startDate: null,
-            cardioItems: [],
-            weightsItems: []
+        return {
+          ...item,
+          weights: {
+            ...item.weights,
+            exercises: newExercises,
+            completed
+          }
         };
-        let trainingData = [];
-        let selectedDay;
+      }
+      return item;
+    }));
+  };
 
-        const colors = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4', '#F97316'];
+  // 計算完成率
+  const calculateCompletionRate = () => {
+    const totalCardio = trainingData.length;
+    const completedCardio = trainingData.filter(item => item.cardio.completed).length;
+    
+    const totalWeights = trainingData.filter(item => item.weights).length;
+    const completedWeights = trainingData.filter(item => item.weights && item.weights.completed).length;
+    
+    return {
+      cardio: totalCardio > 0 ? ((completedCardio / totalCardio) * 100).toFixed(1) : 0,
+      weights: totalWeights > 0 ? ((completedWeights / totalWeights) * 100).toFixed(1) : 0,
+      overall: totalCardio > 0 ? (((completedCardio + completedWeights) / (totalCardio + totalWeights)) * 100).toFixed(1) : 0
+    };
+  };
 
-        // --- Core Logic ---
+  // 生成重訓進度圖表數據
+  const generateProgressData = () => {
+    const allExercises = [...trainingPlan.上肢訓練, ...trainingPlan.下肢訓練];
+    const exerciseData = {};
+    
+    allExercises.forEach(exercise => {
+      exerciseData[exercise] = [];
+    });
 
-        function initApp() {
-            loadSettings();
-            if (userSettings.startDate) {
-                const today = new Date();
-                const start = new Date(userSettings.startDate);
-                const diffTime = Math.abs(today - start);
-                selectedDay = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                loadTrainingData();
-                renderAll();
-            } else {
-                switchTab('settings');
-            }
-        }
-
-        function loadSettings() {
-            const savedSettings = localStorage.getItem('fitness-tracker-settings');
-            if (savedSettings) {
-                userSettings = JSON.parse(savedSettings);
-                document.getElementById('startDate').value = userSettings.startDate;
-                renderSettingsLists();
-            }
-        }
-
-        function saveSettings() {
-            const startDate = document.getElementById('startDate').value;
-            if (!startDate) {
-                alert('請選擇計畫開始日期！');
-                return;
-            }
-            userSettings.startDate = startDate;
-            localStorage.setItem('fitness-tracker-settings', JSON.stringify(userSettings));
-            alert('設定已儲存！');
-            
-            // Re-initialize app to create new training data
-            selectedDay = 1;
-            trainingData = initializeTrainingData();
-            saveTrainingData();
-            renderAll();
-            switchTab('training');
-        }
-
-        function loadTrainingData() {
-            const savedData = localStorage.getItem('fitness-tracker-data');
-            if (savedData) {
-                trainingData = JSON.parse(savedData);
-            } else {
-                trainingData = initializeTrainingData();
-                saveTrainingData();
-            }
-        }
-
-        function saveTrainingData() {
-            localStorage.setItem('fitness-tracker-data', JSON.stringify(trainingData));
-        }
-
-        function initializeTrainingData(days = 50) {
-            const data = [];
-            for (let day = 1; day <= days; day++) {
-                const dayOfWeek = ((day - 1) % 7);
-                const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-                
-                const dayData = {
-                    day,
-                    weekday: weekdays[dayOfWeek],
-                    cardio: {
-                        type: userSettings.cardioItems[day % userSettings.cardioItems.length] || null,
-                        duration: 30, // Default duration
-                        completed: false
-                    },
-                    weights: {
-                        type: userSettings.weightsItems[day % userSettings.weightsItems.length] || null,
-                        exercises: {},
-                        completed: false
-                    }
-                };
-
-                // Populate weight exercises for the day
-                if (dayData.weights.type) {
-                     dayData.weights.exercises[dayData.weights.type] = ''; // Simplified for now
-                }
-                
-                data.push(dayData);
-            }
-            return data;
-        }
-
-        // --- UI Rendering ---
-        
-        function renderSettingsLists() {
-            const cardioList = document.getElementById('cardio-list');
-            const weightsList = document.getElementById('weights-list');
-            cardioList.innerHTML = '';
-            weightsList.innerHTML = '';
-
-            userSettings.cardioItems.forEach((item, index) => {
-                const li = document.createElement('div');
-                li.className = 'exercise-item-setting';
-                li.innerHTML = `<span>${item}</span><button onclick="removeExercise('cardio', ${index})">移除</button>`;
-                cardioList.appendChild(li);
+    trainingData.forEach(dayData => {
+      if (dayData.weights && dayData.weights.exercises) {
+        Object.entries(dayData.weights.exercises).forEach(([exercise, weight]) => {
+          if (weight && !isNaN(parseFloat(weight))) {
+            exerciseData[exercise].push({
+              day: dayData.day,
+              weight: parseFloat(weight),
+              weekday: `第${dayData.day}天`
             });
+          }
+        });
+      }
+    });
 
-            userSettings.weightsItems.forEach((item, index) => {
-                const li = document.createElement('div');
-                li.className = 'exercise-item-setting';
-                li.innerHTML = `<span>${item}</span><button onclick="removeExercise('weights', ${index})">移除</button>`;
-                weightsList.appendChild(li);
-            });
-        }
+    return exerciseData;
+  };
+
+  // 生成圓餅圖數據
+  const generatePieChartData = () => {
+    const rates = calculateCompletionRate();
+    return [
+      { name: '有氧運動', value: parseFloat(rates.cardio), color: '#3B82F6' },
+      { name: '重量訓練', value: parseFloat(rates.weights), color: '#10B981' },
+      { name: '未完成', value: 100 - parseFloat(rates.overall), color: '#E5E7EB' }
+    ];
+  };
+
+  const currentDay = trainingData.find(item => item.day === selectedDay);
+  const completionRate = calculateCompletionRate();
+  const progressData = generateProgressData();
+  const pieData = generatePieChartData();
+
+  const exerciseColors = {
+    '啞鈴肩推': '#8B5CF6',
+    '啞鈴胸推': '#EF4444',
+    '啞鈴划船': '#F59E0B',
+    '啞鈴側平舉': '#06B6D4',
+    '啞鈴硬舉': '#10B981',
+    '弓步蹲': '#F97316',
+    '臀橋': '#EC4899'
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto p-6 bg-white">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
+          <Dumbbell className="text-blue-600" />
+          50天健身追蹤計劃
+          <span className="text-lg font-normal text-gray-600">
+            (起始日期: 2025/8/11)
+          </span>
+        </h1>
         
-        function addExercise(type) {
-            const inputId = type === 'cardio' ? 'newCardioInput' : 'newWeightsInput';
-            const newItem = document.getElementById(inputId).value.trim();
-            if (newItem) {
-                if (type === 'cardio') {
-                    userSettings.cardioItems.push(newItem);
-                } else {
-                    userSettings.weightsItems.push(newItem);
-                }
-                document.getElementById(inputId).value = '';
-                renderSettingsLists();
-            }
-        }
+        {/* 導航標籤 */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveView('daily')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeView === 'daily'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            <Calendar size={16} className="inline mr-2" />
+            每日訓練
+          </button>
+          <button
+            onClick={() => setActiveView('charts')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeView === 'charts'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            <TrendingUp size={16} className="inline mr-2" />
+            重量進度
+          </button>
+          <button
+            onClick={() => setActiveView('stats')}
+            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              activeView === 'stats'
+                ? 'bg-blue-500 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            <PieChart size={16} className="inline mr-2" />
+            完成統計
+          </button>
+        </div>
         
-        function removeExercise(type, index) {
-            if (type === 'cardio') {
-                userSettings.cardioItems.splice(index, 1);
-            } else {
-                userSettings.weightsItems.splice(index, 1);
-            }
-            renderSettingsLists();
-        }
+        {/* 完成率統計 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <Heart size={20} />
+              <span className="font-medium">有氧完成率</span>
+            </div>
+            <div className="text-2xl font-bold">{completionRate.cardio}%</div>
+          </div>
+          <div className="bg-gradient-to-r from-green-500 to-green-600 text-white p-4 rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <Dumbbell size={20} />
+              <span className="font-medium">重訓完成率</span>
+            </div>
+            <div className="text-2xl font-bold">{completionRate.weights}%</div>
+          </div>
+          <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 rounded-lg">
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar size={20} />
+              <span className="font-medium">總完成率</span>
+            </div>
+            <div className="text-2xl font-bold">{completionRate.overall}%</div>
+          </div>
+        </div>
+      </div>
 
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.getElementById('training-tab').style.display = 'none';
-            document.getElementById('charts-tab').style.display = 'none';
-            document.getElementById('settings-tab').style.display = 'none';
-            document.getElementById('stats-section').style.display = 'none';
-            document.getElementById('day-grid').parentElement.style.display = 'none';
-            document.getElementById('main-header').textContent = '💪 健身追蹤器';
-
-            if (tab === 'training') {
-                document.querySelector('.tab-btn:first-child').classList.add('active');
-                document.getElementById('training-tab').style.display = 'block';
-                document.getElementById('stats-section').style.display = 'grid';
-                document.getElementById('day-grid').parentElement.style.display = 'block';
-                document.getElementById('main-header').textContent = `💪 第 ${selectedDay} 天 - 健身追蹤`;
-            } else if (tab === 'charts') {
-                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
-                document.getElementById('charts-tab').style.display = 'block';
-                document.getElementById('main-header').textContent = `📊 進度圖表`;
-                initCharts();
-            } else if (tab === 'settings') {
-                document.querySelector('.tab-btn:nth-child(3)').classList.add('active');
-                document.getElementById('settings-tab').style.display = 'block';
-                document.getElementById('main-header').textContent = `⚙️ 設定`;
-                renderSettingsLists();
-            }
-        }
-
-        function renderDayGrid() {
-            const grid = document.getElementById('day-grid');
-            grid.innerHTML = '';
-            
-            if (!trainingData.length) return;
-
-            trainingData.forEach(item => {
-                const btn = document.createElement('button');
-                btn.className = `day-btn ${selectedDay === item.day ? 'active' : ''}`;
-                btn.onclick = () => {
-                    selectedDay = item.day;
-                    renderAll();
-                };
-                
-                const hasCardio = item.cardio.completed;
-                const hasWeights = item.weights && item.weights.completed;
-                
-                btn.innerHTML = `
-                    <div class="day-num">${item.day}</div>
-                    <div class="weekday">週${item.weekday}</div>
-                    <div class="indicators">
-                        ${hasCardio ? '<div class="indicator cardio"></div>' : ''}
-                        ${hasWeights ? '<div class="indicator weights"></div>' : ''}
-                    </div>
-                `;
-                grid.appendChild(btn);
-            });
-        }
-
-        function renderTrainingContent() {
-            const content = document.getElementById('training-tab');
-            const currentDay = trainingData.find(item => item.day === selectedDay);
-            
-            if (!currentDay) {
-                content.innerHTML = '<div class="no-training">請先在設定頁面設定計畫！</div>';
-                return;
-            }
-            
-            content.innerHTML = `
-                <div class="section-title">第${selectedDay}天 - 週${currentDay.weekday}</div>
-                
-                <div class="cardio-card">
-                    <div class="cardio-info">
-                        <div class="cardio-type">${currentDay.cardio.type || '無有氧項目'}</div>
-                        <div class="cardio-duration">時間: ${currentDay.cardio.duration} 分鐘</div>
-                    </div>
-                    <button class="cardio-btn ${currentDay.cardio.completed ? 'completed' : ''}" 
-                            onclick="updateCardioStatus(${selectedDay}, ${!currentDay.cardio.completed})">
-                        ${currentDay.cardio.completed ? '✅ 已完成' : '⭕ 未完成'}
+      {/* 每日訓練視圖 */}
+      {activeView === 'daily' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 天數選擇 */}
+          <div className="lg:col-span-1">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+              選擇天數 
+              <span className="text-sm font-normal text-blue-600 ml-2">
+                (今天是第{calculateCurrentDay()}天)
+              </span>
+            </h3>
+            <div className="bg-gray-50 rounded-lg p-4 max-h-96 overflow-y-auto">
+              <div className="grid grid-cols-5 gap-2">
+                {trainingData.map((item) => {
+                  const hasCardio = item.cardio.completed;
+                  const hasWeights = item.weights && item.weights.completed;
+                  const isSelected = selectedDay === item.day;
+                  const isToday = item.day === calculateCurrentDay();
+                  
+                  return (
+                    <button
+                      key={item.day}
+                      onClick={() => setSelectedDay(item.day)}
+                      className={`p-2 rounded-lg text-sm font-medium transition-all ${
+                        isSelected
+                          ? 'bg-blue-500 text-white shadow-lg'
+                          : isToday
+                          ? 'bg-yellow-100 hover:bg-yellow-200 text-gray-800 border-yellow-400'
+                          : 'bg-white hover:bg-blue-50 text-gray-700'
+                      } border-2 ${
+                        isSelected 
+                          ? 'border-blue-500' 
+                          : isToday
+                          ? 'border-yellow-400'
+                          : 'border-gray-200'
+                      }`}
+                    >
+                      <div>第{item.day}天</div>
+                      <div className="text-xs opacity-75">
+                        週{item.weekday}
+                        {isToday && <div className="text-xs font-bold text-yellow-600">今天</div>}
+                      </div>
+                      <div className="flex justify-center gap-1 mt-1">
+                        {hasCardio && <div className="w-2 h-2 bg-blue-400 rounded-full"></div>}
+                        {hasWeights && <div className="w-2 h-2 bg-green-400 rounded-full"></div>}
+                      </div>
                     </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* 訓練詳情 */}
+          <div className="lg:col-span-2">
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+              第{selectedDay}天 - 週{currentDay?.weekday}
+            </h3>
+            
+            <div className="space-y-6">
+              {/* 有氧運動 */}
+              <div className="bg-blue-50 rounded-lg p-6">
+                <h4 className="text-lg font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                  <Heart className="text-blue-600" />
+                  有氧運動
+                </h4>
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <div className="text-lg font-medium text-gray-800">
+                      {currentDay?.cardio.type}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      時間: {currentDay?.cardio.duration} 分鐘
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => updateCardioStatus(selectedDay, !currentDay?.cardio.completed)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                      currentDay?.cardio.completed
+                        ? 'bg-green-500 text-white hover:bg-green-600'
+                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                    }`}
+                  >
+                    {currentDay?.cardio.completed ? (
+                      <CheckCircle2 size={20} />
+                    ) : (
+                      <Circle size={20} />
+                    )}
+                    {currentDay?.cardio.completed ? '已完成' : '未完成'}
+                  </button>
+                </div>
+              </div>
+
+              {/* 重量訓練 */}
+              {currentDay?.weights && (
+                <div className="bg-green-50 rounded-lg p-6">
+                  <h4 className="text-lg font-semibold text-green-800 mb-4 flex items-center gap-2">
+                    <Dumbbell className="text-green-600" />
+                    {currentDay.weights.type}
+                  </h4>
+                  <div className="space-y-3">
+                    {Object.entries(currentDay.weights.exercises).map(([exercise, weight]) => (
+                      <div key={exercise} className="flex items-center gap-4">
+                        <label className="flex-1 text-gray-700 font-medium">
+                          {exercise}
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            value={weight}
+                            onChange={(e) => updateWeight(selectedDay, exercise, e.target.value)}
+                            className="w-20 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
+                            placeholder="公斤"
+                          />
+                          <span className="text-sm text-gray-500">kg</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="mt-4 text-sm text-gray-600">
+                    狀態: {currentDay.weights.completed ? (
+                      <span className="text-green-600 font-medium">已記錄重量</span>
+                    ) : (
+                      <span className="text-gray-500">尚未記錄</span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 重量進度圖表視圖 */}
+      {activeView === 'charts' && (
+        <div className="space-y-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">重量訓練進度追蹤</h2>
+          
+          {/* 上肢訓練圖表 */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">上肢訓練進度</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis label={{ value: '重量 (kg)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip />
+                <Legend />
+                {trainingPlan.上肢訓練.map(exercise => {
+                  if (progressData[exercise].length > 0) {
+                    return (
+                      <Line
+                        key={exercise}
+                        dataKey="weight"
+                        data={progressData[exercise]}
+                        stroke={exerciseColors[exercise]}
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        name={exercise}
+                      />
+                    );
+                  }
+                  return null;
+                })}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* 下肢訓練圖表 */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">下肢訓練進度</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis label={{ value: '重量 (kg)', angle: -90, position: 'insideLeft' }} />
+                <Tooltip />
+                <Legend />
+                {trainingPlan.下肢訓練.map(exercise => {
+                  if (progressData[exercise].length > 0) {
+                    return (
+                      <Line
+                        key={exercise}
+                        dataKey="weight"
+                        data={progressData[exercise]}
+                        stroke={exerciseColors[exercise]}
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        name={exercise}
+                      />
+                    );
+                  }
+                  return null;
+                })}
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* 個別動作圖表 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Object.entries(progressData).map(([exercise, data]) => {
+              if (data.length === 0) return null;
+              
+              return (
+                <div key={exercise} className="bg-white border border-gray-200 rounded-lg p-4">
+                  <h4 className="text-lg font-semibold text-gray-800 mb-3">{exercise}</h4>
+                  <ResponsiveContainer width="100%" height={200}>
+                    <LineChart data={data}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" />
+                      <YAxis />
+                      <Tooltip labelFormatter={(value) => `第${value}天`} />
+                      <Line
+                        dataKey="weight"
+                        stroke={exerciseColors[exercise]}
+                        strokeWidth={2}
+                        dot={{ r: 3 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 統計視圖 */}
+      {activeView === 'stats' && (
+        <div className="space-y-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">完成度統計</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* 圓餅圖 */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">整體完成度</h3>
+              <ResponsiveContainer width="100%" height={400}>
+                <RechartsPieChart>
+                  <Pie
+                    dataKey="value"
+                    data={pieData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={120}
+                    fill="#8884d8"
+                    label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
+                  >
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* 詳細統計 */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6">
+              <h3 className="text-xl font-semibold text-gray-800 mb-4">詳細數據</h3>
+              <div className="space-y-4">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-blue-800 mb-2">有氧運動</h4>
+                  <div className="text-sm text-gray-600">
+                    <p>已完成: {trainingData.filter(item => item.cardio.completed).length} 天</p>
+                    <p>總天數: {trainingData.length} 天</p>
+                    <p>完成率: {completionRate.cardio}%</p>
+                  </div>
                 </div>
                 
-                ${currentDay.weights.type ? `
-                    <div class="weights-card">
-                        <div class="weights-title">${currentDay.weights.type}</div>
-                        <div class="exercise-list">
-                            ${Object.entries(currentDay.weights.exercises).map(([exercise, weight]) => {
-                                const lastWeight = getLastWeight(selectedDay, exercise);
-                                return `
-                                    <div class="exercise-item">
-                                        <div class="exercise-name">
-                                            <span>${exercise}</span>
-                                            ${lastWeight ? `<span class="last-weight">上次: ${lastWeight}kg</span>` : ''}
-                                        </div>
-                                        <div class="weight-input-group">
-                                            <input type="number" 
-                                                    class="weight-input" 
-                                                    value="${weight}" 
-                                                    placeholder="重量"
-                                                    onchange="updateWeight(${selectedDay}, '${exercise}', this.value)">
-                                            <span class="unit">kg</span>
-                                            ${lastWeight ? `
-                                                <button class="last-btn" onclick="autoFillLastWeight(${selectedDay}, '${exercise}')">上次</button>
-                                            ` : ''}
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                        <div class="status">
-                            ${currentDay.weights.completed ? '✅ 已記錄重量' : '⏳ 尚未記錄'}
-                        </div>
-                    </div>
-                ` : '<div class="no-training">今天沒有重量訓練</div>'}
-            `;
-        }
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-green-800 mb-2">重量訓練</h4>
+                  <div className="text-sm text-gray-600">
+                    <p>已完成: {trainingData.filter(item => item.weights && item.weights.completed).length} 天</p>
+                    <p>重訓天數: {trainingData.filter(item => item.weights).length} 天</p>
+                    <p>完成率: {completionRate.weights}%</p>
+                  </div>
+                </div>
 
-        function renderStats() {
-            const rates = calculateCompletionRate();
-            document.getElementById('cardio-rate').textContent = rates.cardio + '%';
-            document.getElementById('weights-rate').textContent = rates.weights + '%';
-            document.getElementById('total-rate').textContent = rates.overall + '%';
-        }
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <h4 className="font-semibold text-purple-800 mb-2">各動作記錄次數</h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    {Object.entries(progressData).map(([exercise, data]) => (
+                      <p key={exercise}>{exercise}: {data.length} 次記錄</p>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
 
-        function renderAll() {
-            renderDayGrid();
-            renderTrainingContent();
-            renderStats();
-            document.getElementById('main-header').textContent = `💪 第 ${selectedDay} 天 - 健身追蹤`;
-        }
-
-        function initCharts() {
-            const chartContainer = document.getElementById('chart-container-all');
-            chartContainer.innerHTML = '';
-            
-            for (const key in charts) { if (charts[key]) charts[key].destroy(); }
-            charts = {};
-
-            const allWeightsItems = userSettings.weightsItems;
-            let hasWeightData = false;
-
-            allWeightsItems.forEach((exercise, index) => {
-                const exerciseData = {};
-                trainingData.forEach(day => {
-                    if (day.weights && day.weights.exercises[exercise] && day.weights.exercises[exercise] !== '') {
-                        exerciseData[day.day] = parseFloat(day.weights.exercises[exercise]);
-                        hasWeightData = true;
-                    }
-                });
-
-                if (Object.keys(exerciseData).length > 0) {
-                    const sortedDays = Object.keys(exerciseData).map(Number).sort((a, b) => a - b);
-                    const labels = sortedDays.map(day => `第${day}天`);
-                    const dataPoints = sortedDays.map(day => exerciseData[day] || null);
-                    const color = colors[index % colors.length];
-
-                    const chartCard = document.createElement('div');
-                    chartCard.className = 'chart-container';
-                    chartCard.innerHTML = `
-                        <div class="chart-title">${exercise} - 重量進度追蹤</div>
-                        <canvas id="chart-${exercise}" class="chart-canvas"></canvas>
-                    `;
-                    chartContainer.appendChild(chartCard);
-
-                    const ctx = document.getElementById(`chart-${exercise}`).getContext('2d');
-                    charts[exercise] = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: [{
-                                label: exercise,
-                                data: dataPoints,
-                                borderColor: color,
-                                backgroundColor: color + '20',
-                                borderWidth: 3,
-                                fill: false,
-                                tension: 0.1,
-                                pointBackgroundColor: color,
-                                pointBorderColor: '#ffffff',
-                                pointBorderWidth: 2,
-                                pointRadius: 5,
-                                pointHoverRadius: 7,
-                                spanGaps: true
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { display: false },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    callbacks: {
-                                        title: (context) => context[0].label,
-                                        label: (context) => `${context.dataset.label}: ${context.parsed.y}kg`
-                                    }
-                                }
-                            },
-                            scales: {
-                                x: { display: true, title: { display: true, text: '訓練天數', font: { size: 12, weight: '500' } }, grid: { color: 'rgba(0,0,0,0.1)' } },
-                                y: { display: true, title: { display: true, text: '重量 (kg)', font: { size: 12, weight: '500' } }, grid: { color: 'rgba(0,0,0,0.1)' }, beginAtZero: false }
-                            },
-                            interaction: { mode: 'index', intersect: false },
-                            hover: { mode: 'index', intersect: false }
-                        }
-                    });
-                }
-            });
-
-            if (!hasWeightData) {
-                const noDataCard = document.createElement('div');
-                noDataCard.className = 'chart-container';
-                noDataCard.style.textAlign = 'center';
-                noDataCard.style.padding = '40px 20px';
-                noDataCard.style.color = '#6B7280';
-                noDataCard.textContent = '還沒有重量訓練記錄';
-                chartContainer.appendChild(noDataCard);
-            }
-        }
-        
-        // --- Event Handlers & Data Manipulations ---
-
-        function getLastWeight(currentDay, exercise) {
-            const previousSessions = trainingData
-                .filter(item => item.day < currentDay && item.weights && item.weights.exercises[exercise] !== '')
-                .sort((a, b) => b.day - a.day);
-            return previousSessions.length > 0 ? previousSessions[0].weights.exercises[exercise] : '';
-        }
-
-        function updateCardioStatus(day, completed) {
-            const dayData = trainingData.find(item => item.day === day);
-            if (dayData) {
-                dayData.cardio.completed = completed;
-                saveTrainingData();
-                renderAll();
-            }
-        }
-
-        function updateWeight(day, exercise, weight) {
-            const dayData = trainingData.find(item => item.day === day);
-            if (dayData && dayData.weights) {
-                dayData.weights.exercises[exercise] = weight;
-                dayData.weights.completed = Object.values(dayData.weights.exercises).some(w => w !== '');
-                saveTrainingData();
-                renderAll();
-                if (currentTab === 'charts') { initCharts(); }
-            }
-        }
-
-        function autoFillLastWeight(day, exercise) {
-            const lastWeight = getLastWeight(day, exercise);
-            if (lastWeight) {
-                updateWeight(day, exercise, lastWeight);
-            }
-        }
-
-        function calculateCompletionRate() {
-            const totalCardio = trainingData.length;
-            const completedCardio = trainingData.filter(item => item.cardio && item.cardio.completed).length;
-            
-            const totalWeights = trainingData.filter(item => item.weights && item.weights.type).length;
-            const completedWeights = trainingData.filter(item => item.weights && item.weights.completed).length;
-            
-            const totalTasks = totalCardio + totalWeights;
-            const completedTasks = completedCardio + completedWeights;
-
-            return {
-                cardio: totalCardio > 0 ? ((completedCardio / totalCardio) * 100).toFixed(1) : 0,
-                weights: totalWeights > 0 ? ((completedWeights / totalWeights) * 100).toFixed(1) : 0,
-                overall: totalTasks > 0 ? ((completedTasks / totalTasks) * 100).toFixed(1) : 0
-            };
-        }
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', initApp);
-    </script>
-</body>
-</html>
+export default FitnessTracker;
