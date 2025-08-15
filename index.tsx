@@ -14,6 +14,19 @@ const FitnessTracker = () => {
     '跑步機快走', '滑步機', '腳踏車機', '跑步機間歇', '排球', '伸展'
   ];
 
+  // 計算當前應該是第幾天
+  const calculateCurrentDay = () => {
+    const startDate = new Date('2025-08-11');
+    const today = new Date();
+    const diffTime = today - startDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    
+    // 確保天數在1-50範圍內
+    if (diffDays < 1) return 1;
+    if (diffDays > 50) return 50;
+    return diffDays;
+  };
+
   // 初始化50天的訓練數據
   const initializeTrainingData = () => {
     const data = [];
@@ -61,19 +74,6 @@ const FitnessTracker = () => {
       });
     }
     return data;
-  };
-
-  // 計算當前應該是第幾天
-  const calculateCurrentDay = () => {
-    const startDate = new Date('2025-08-11');
-    const today = new Date();
-    const diffTime = today - startDate;
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    
-    // 確保天數在1-50範圍內
-    if (diffDays < 1) return 1;
-    if (diffDays > 50) return 50;
-    return diffDays;
   };
 
   const [trainingData, setTrainingData] = useState(initializeTrainingData());
