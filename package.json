@@ -5,9 +5,9 @@
   "homepage": "https://EJ0418.github.io/50DaysExcercize",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "NODE_ENV=production vite build",
     "preview": "vite preview",
-    "predeploy": "npm run build",
+    "predeploy": "NODE_ENV=production npm run build",
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
