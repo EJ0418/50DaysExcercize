@@ -7,7 +7,9 @@ const FitnessTracker = () => {
   const trainingPlan = {
     上肢訓練: ['啞鈴肩推', '啞鈴胸推', '啞鈴划船', '啞鈴側平舉'],
     下肢訓練: ['啞鈴硬舉', '弓步蹲', '臀橋']
-  };
+  } as const;
+
+  type WeightTrainingType = keyof typeof trainingPlan;
 
   // 有氧訓練類型
   const cardioTypes = [
@@ -18,7 +20,7 @@ const FitnessTracker = () => {
   const calculateCurrentDay = () => {
     const startDate = new Date('2025-08-11');
     const today = new Date();
-    const diffTime = today - startDate;
+    const diffTime = today.getTime() - startDate.getTime();
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
     
     // 確保天數在1-50範圍內
@@ -27,14 +29,15 @@ const FitnessTracker = () => {
     return diffDays;
   };
 
+  // 星期對應陣列
+  const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
+
   // 初始化50天的訓練數據
   const initializeTrainingData = () => {
     const data = [];
     for (let day = 1; day <= 50; day++) {
       const dayOfWeek = ((day - 1) % 7);
-      const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
-      
-      let cardioType, duration, weightTraining;
+      let cardioType: string, duration: number, weightTraining: WeightTrainingType | null;
       
       // 根據星期安排訓練
       if (dayOfWeek === 0 || dayOfWeek === 2 || dayOfWeek === 4) { // 週一三五 - 上肢
@@ -63,14 +66,16 @@ const FitnessTracker = () => {
           duration,
           completed: false
         },
-        weights: weightTraining ? {
-          type: weightTraining,
-          exercises: trainingPlan[weightTraining].reduce((acc, exercise) => {
-            acc[exercise] = '';
-            return acc;
-          }, {}),
-          completed: false
-        } : null
+        weights: weightTraining
+          ? {
+              type: weightTraining,
+              exercises: trainingPlan[weightTraining].reduce((acc, exercise) => {
+                acc[exercise] = '';
+                return acc;
+              }, {} as Record<string, string>),
+              completed: false
+            }
+          : null
       });
     }
     return data;
@@ -81,7 +86,7 @@ const FitnessTracker = () => {
   const [activeView, setActiveView] = useState('daily'); // 'daily', 'charts', 'stats'
 
   // 更新有氧完成狀態
-  const updateCardioStatus = (day, completed) => {
+  const updateCardioStatus = (day: number, completed: boolean) => {
     setTrainingData(prev => prev.map(item => 
       item.day === day 
         ? { ...item, cardio: { ...item.cardio, completed } }
@@ -90,7 +95,7 @@ const FitnessTracker = () => {
   };
 
   // 更新重量記錄
-  const updateWeight = (day, exercise, weight) => {
+  const updateWeight = (day: number, exercise: string, weight: string) => {
     setTrainingData(prev => prev.map(item => {
       if (item.day === day && item.weights) {
         const newExercises = { ...item.weights.exercises, [exercise]: weight };
@@ -127,7 +132,15 @@ const FitnessTracker = () => {
   // 生成重訓進度圖表數據
   const generateProgressData = () => {
     const allExercises = [...trainingPlan.上肢訓練, ...trainingPlan.下肢訓練];
-    const exerciseData = {};
+    const exerciseData: Record<(typeof allExercises)[number], any[]> = {
+      啞鈴肩推: [],
+      啞鈴胸推: [],
+      啞鈴划船: [],
+      啞鈴側平舉: [],
+      啞鈴硬舉: [],
+      弓步蹲: [],
+      臀橋: []
+    };
     
     allExercises.forEach(exercise => {
       exerciseData[exercise] = [];
@@ -137,7 +150,7 @@ const FitnessTracker = () => {
       if (dayData.weights && dayData.weights.exercises) {
         Object.entries(dayData.weights.exercises).forEach(([exercise, weight]) => {
           if (weight && !isNaN(parseFloat(weight))) {
-            exerciseData[exercise].push({
+            exerciseData[exercise as keyof typeof exerciseData].push({
               day: dayData.day,
               weight: parseFloat(weight),
               weekday: `第${dayData.day}天`
@@ -154,9 +167,9 @@ const FitnessTracker = () => {
   const generatePieChartData = () => {
     const rates = calculateCompletionRate();
     return [
-      { name: '有氧運動', value: parseFloat(rates.cardio), color: '#3B82F6' },
-      { name: '重量訓練', value: parseFloat(rates.weights), color: '#10B981' },
-      { name: '未完成', value: 100 - parseFloat(rates.overall), color: '#E5E7EB' }
+      { name: '有氧運動', value: parseFloat(String(rates.cardio)), color: '#3B82F6' },
+      { name: '重量訓練', value: parseFloat(String(rates.weights)), color: '#10B981' },
+      { name: '未完成', value: 100 - parseFloat(String(rates.overall)), color: '#E5E7EB' }
     ];
   };
 
@@ -404,7 +417,7 @@ const FitnessTracker = () => {
                         key={exercise}
                         dataKey="weight"
                         data={progressData[exercise]}
-                        stroke={exerciseColors[exercise]}
+                        stroke={exerciseColors[exercise as keyof typeof exerciseColors]}
                         strokeWidth={2}
                         dot={{ r: 4 }}
                         name={exercise}
@@ -434,7 +447,7 @@ const FitnessTracker = () => {
                         key={exercise}
                         dataKey="weight"
                         data={progressData[exercise]}
-                        stroke={exerciseColors[exercise]}
+                        stroke={exerciseColors[exercise as keyof typeof exerciseColors]}
                         strokeWidth={2}
                         dot={{ r: 4 }}
                         name={exercise}
@@ -463,7 +476,7 @@ const FitnessTracker = () => {
                       <Tooltip labelFormatter={(value) => `第${value}天`} />
                       <Line
                         dataKey="weight"
-                        stroke={exerciseColors[exercise]}
+                        stroke={exerciseColors[exercise as keyof typeof exerciseColors]}
                         strokeWidth={2}
                         dot={{ r: 3 }}
                       />
