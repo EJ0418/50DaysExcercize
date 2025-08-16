@@ -2,13 +2,13 @@
   "name": "50days-excercize",
   "version": "1.0.0",
   "private": true,
-  "homepage": "https://EJ0418.github.io/50DaysExcercize",
+  "homepage": "https://EJ0418.github.io",
   "scripts": {
     "dev": "vite",
     "build": "NODE_ENV=production vite build",
     "preview": "vite preview",
     "predeploy": "NODE_ENV=production npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "cp -r dist/* ."
   },
   "dependencies": {
     "lucide-react": "^0.292.0",

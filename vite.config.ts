@@ -5,9 +5,12 @@ import react from '@vitejs/plugin-react';
 const isProduction = process.env.NODE_ENV === 'production';
 
 export default defineConfig({
-  base: isProduction ? '/50DaysExcercize/' : '/',
+  // 使用相對路徑
+  base: './',
   plugins: [react()],
   build: {
+    // 使用標準輸出目錄
+    outDir: 'dist',
     // 確保生成 sourcemap 以便於調試
     sourcemap: true,
   },
