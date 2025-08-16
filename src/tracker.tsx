@@ -11,7 +11,7 @@ const FitnessTracker = () => {
 
   // 有氧訓練類型
   const cardioTypes = [
-    '跑步機快走', '滑步機', '腳踏車機', '跑步機間歇', '排球', '伸展'
+    '跑步機快走', '滑步機', '腳踏車機', '跑步機間歇', '瑜伽', '伸展'
   ];
 
   // 計算當前應該是第幾天
@@ -45,9 +45,9 @@ const FitnessTracker = () => {
         cardioType = cardioTypes[Math.floor(Math.random() * 4)]; // 前4種有氧
         duration = day <= 7 ? 15 : day <= 14 ? 20 : 25;
         weightTraining = '下肢訓練';
-      } else if (dayOfWeek === 5) { // 週六 - 排球
-        cardioType = '排球';
-        duration = 240;
+      } else if (dayOfWeek === 5) { // 週六 - 瑜伽
+        cardioType = '瑜伽';
+        duration =  day <= 7 ? 20 : day <= 14 ? 25 : 30;
         weightTraining = null;
       } else { // 週日 - 伸展
         cardioType = '伸展';
