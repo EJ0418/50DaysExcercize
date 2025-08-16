@@ -133,7 +133,7 @@
 </head>
   <body>
     <div id="root"></div>
-    <!-- 開發環境使用絕對路徑，生產環境會自動轉為正確路徑 -->
-    <script type="module" src="/src/main.tsx"></script>
+    <!-- 使用相對路徑，讓 Vite 正確處理 -->
+    <script type="module" src="./src/main.tsx"></script>
   </body>
 </html>
