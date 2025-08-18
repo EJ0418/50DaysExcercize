@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle2, Circle, Calendar, Dumbbell, Heart, TrendingUp, PieChart } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart as RechartsPieChart, Pie, Cell } from 'recharts';
 
@@ -10,6 +10,22 @@ const FitnessTracker = () => {
   } as const;
 
   type WeightTrainingType = keyof typeof trainingPlan;
+
+  // 定義訓練數據的類型
+  type TrainingDataItem = {
+    day: number;
+    weekday: string;
+    cardio: {
+      type: string;
+      duration: number;
+      completed: boolean;
+    };
+    weights: {
+      type: WeightTrainingType;
+      exercises: Record<string, string>;
+      completed: boolean;
+    } | null;
+  };
 
   // 有氧訓練類型
   const cardioTypes = [
@@ -33,7 +49,7 @@ const FitnessTracker = () => {
   const weekdays = ['一', '二', '三', '四', '五', '六', '日'];
 
   // 初始化50天的訓練數據
-  const initializeTrainingData = () => {
+  const initializeTrainingData = (): TrainingDataItem[] => {
     const data = [];
     for (let day = 1; day <= 50; day++) {
       const dayOfWeek = ((day - 1) % 7);
@@ -81,9 +97,18 @@ const FitnessTracker = () => {
     return data;
   };
 
-  const [trainingData, setTrainingData] = useState(initializeTrainingData());
+  // 從 localStorage 獲取資料或初始化新資料
+  const [trainingData, setTrainingData] = useState<TrainingDataItem[]>(() => {
+    const savedData = localStorage.getItem('trainingData');
+    return savedData ? JSON.parse(savedData) : initializeTrainingData();
+  });
   const [selectedDay, setSelectedDay] = useState(calculateCurrentDay());
   const [activeView, setActiveView] = useState('daily'); // 'daily', 'charts', 'stats'
+  
+  // 當資料變更時保存到 localStorage
+  useEffect(() => {
+    localStorage.setItem('trainingData', JSON.stringify(trainingData));
+  }, [trainingData]);
 
   // 更新有氧完成狀態
   const updateCardioStatus = (day: number, completed: boolean) => {
